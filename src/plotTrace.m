@@ -1,5 +1,4 @@
 function plotTrace( trace, threshold, cell_peaks)
-figure;
 plot(trace, 'b');
 hold on; 
 plot([0 numel(trace)], [threshold threshold], 'r--');

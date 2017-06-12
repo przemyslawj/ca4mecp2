@@ -10,9 +10,9 @@ for i=1:numel(tiff_files)
     d = tiff_info.recording_date;
     dated_dir = ['20' d(1:2) '-' d(3:4) '-' d(5:6)];
     filepattern = ['C' tiff_info.coverslip_id '.*Fr.*' tiff_info.fr_id '.*3D'];
-    roi_tiff_files = listfiles([data_root_dir '/' dated_dir], [filepattern '.*tif']);
-    roi_zip_files = listfiles([data_root_dir '/' dated_dir], [filepattern '.*zip']);
-    output_f = [output_dir '/' tiff_info.filename '.mat'];
+    roi_tiff_files = listfiles([data_root_dir filesep dated_dir], [filepattern '.*tif']);
+    roi_zip_files = listfiles([data_root_dir filesep dated_dir], [filepattern '.*zip']);
+    output_f = [output_dir filesep tiff_info.filename '.mat'];
 
     if ~isempty(roi_tiff_files) && ~isempty(roi_zip_files) && ~exist(output_f, 'file')
         sprintf('processing file %s\n', fname)

@@ -10,7 +10,7 @@ for file_index=1:numel(inputfiles)
 
     r = rigidAlign(fname);
     tiff_len = numel(imfinfo(fname));
-    output_f = [out_dir '/' filename '_aligned' ext];
+    output_f = [out_dir filesep filename '_aligned' ext];
     for i=1:tiff_len
         data = imread(fname,i);
         data_t = circshift(data, -r.T(i,:));
