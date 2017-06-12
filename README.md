@@ -35,7 +35,13 @@ Example of `data_root_dir` contents:
    └── C1 Frame 1 3D.zip
 </pre>
 
-## Data analysis
+### Filtering ROI for analysis
+Run `select_cells.m` script to manually filter cells used for analysis. The
+script iterates over all ROIs asking if it should be included. The script
+creates  a new _.mat_ data file with  `_selected` suffix, it extends the
+original struct with the `cells_selected` field to the struct.
+
+## Data analysis in Matlab Notebooks
 - `event_analysis.mlx` - analysis of a single recording, requires loading
   of _.dat_ file with extracted signal before running
 - `comparison.mlx` - comparison of recordings between the conditions

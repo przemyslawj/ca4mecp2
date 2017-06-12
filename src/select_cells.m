@@ -1,4 +1,5 @@
 % Need to load .dat file with the signal
+out_dir = '/media/przemek/Data/neurodata/ca_mecp2_culture/signal_selected';
 
 Fcell = dat.Fcell{1};
 FcellNeu = dat.FcellNeu{1};
@@ -6,7 +7,6 @@ FcellNeu = dat.FcellNeu{1};
 stat = FStats(dat);
 peaks = stat.peaks;
 
-out_dir = '/media/przemek/Data/neurodata/ca_mecp2_culture/signal_selected';
 [path,fname,ext] = fileparts(dat.filename);
 
 cells_selected = [];
