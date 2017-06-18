@@ -6,11 +6,8 @@ function [ dF ] = dFOverF( F )
 
 dF = zeros(size(F));
 for i=1:size(F,1)
-    len = size(F,2);
-    X = [ones(len,1), (1:len)'];
-    A = regress(F(i,:)',X);
-    y = A' * X';
-    dF(i,:) = (F(i,:) - y) ./ y;
+    Fbase = smooth(F(i,:),0.3,'lowess')';
+    dF(i,:) = (F(i,:) - Fbase) ./ Fbase;
 end
 
 end

@@ -6,6 +6,7 @@ FcellNeu = dat.FcellNeu{1};
 
 stat = FStats(dat);
 peaks = stat.peaks;
+dF = stat.dF;
 
 [path,fname,ext] = fileparts(dat.filename);
 
@@ -25,7 +26,7 @@ for cell_index=1:roi_count
     hold off;
         
     subplot(4,1,4);
-    plotTrace(dF(i,:), 0, peaks{cell_index});
+    plotTrace(dF(i,:), 0, peaks{i});
     title(sprintf('Trace for ROI %d', i));
     
     prompt = sprintf('Do you want to keep %d out of %d? y/n [y]: ',...
