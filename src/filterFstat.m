@@ -7,7 +7,7 @@ if isfield(fstat,'cells_selected')
     keep_cells = fstat.cells_selected;
 else
     %%Remove noisy and cells without events
-    min_events = 4;
+    min_events = 6;
     dF_max = 3;
     cells_not_noisy = find(max(abs(fstat.dF), [], 2) <= dF_max);
     cell_signal_diff = mean(fstat.Fcell, 2) ...

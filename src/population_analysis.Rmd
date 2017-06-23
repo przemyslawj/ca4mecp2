@@ -1,0 +1,216 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+```{r}
+
+metrics = read.csv('metrics.csv')
+metrics$culture_date = factor(metrics$culture_date)
+cols = names(metrics)
+
+metrics$embryo = paste(metrics$culture_date, metrics$embryo_id) 
+metrics$network_id = paste(metrics$embryo, metrics$coverslip_id) 
+
+#metrics = filter(metrics, div<=45)
+```
+
+```{r}
+DT::datatable(metrics)
+```
+Number of recordings per condition
+```{r}
+aggregate(embryo ~ condition, data=metrics, FUN=length)
+```
+How many embryos recorded from for longer than 1 day
+```{r}
+a=aggregate(div ~ embryo, data=metrics, FUN=function(x) {length(unique(x))})
+filter(a, div > 1)
+```
+Highest Power Frequency as function of DIV
+```{r}
+ggplot(metrics, aes(x = div, y = highest_power_freq, color = condition)) +
+  geom_jitter(position=position_jitter(0.05)) +
+  #geom_label(aes(label=embryo)) +
+  ylab('Highest Power Frequency (Hz)') +
+  xlab('DIV') + 
+  theme_bw()
+```
+Calculate significance of differences between WT vs KO and WT vs HET
+```{r}
+metrics.wtvsko = filter(metrics, condition != 'mecp2het')
+metrics.wtvshet = filter(metrics, condition != 'mecp2ko')
+
+metrics.condition <- data.frame(mecp2wt_mean=numeric(),
+                                mecp2wt_sd=numeric(), 
+                                mecp2het_mean=numeric(), 
+                                mecp2het_sd=numeric(), 
+                                mecp2ko_mean=numeric(), 
+                                mecp2ko_sd=numeric(), 
+                                ko_pval=numeric(),
+                                het_pval=numeric(),
+                                stringsAsFactors=FALSE) 
+metric.cols = cols[9:length(cols)]
+
+for (col in metric.cols) {
+  f = paste(col, '~ condition')
+  a.mean=aggregate(formula(f), data = metrics, FUN = mean)
+  rownames(a.mean) = paste(a.mean$condition, rep('_mean', 3),sep = '')
+  a.std=aggregate(formula(f), data = metrics, FUN = sd)
+  rownames(a.std) = paste(a.std$condition, rep('_sd', 3),sep = '')
+  
+  a.mean$condition = NULL
+  a.std$condition = NULL
+  new.metric = cbind(t(a.mean), t(a.std))
+  names(new.metric) = colnames(new.metric)
+  
+  rko = t.test(formula(f), data=metrics.wtvsko, alternative='two.sided', var.equal=FALSE)
+  rhet = t.test(formula(f), data=metrics.wtvshet, alternative='two.sided', var.equal=FALSE)
+  new.metric = cbind(new.metric, data.frame(ko_pval=rko$p.value, het_val=rhet$p.value))
+  
+  new.metrics.condition = rbind(metrics.condition, new.metric)
+  names(metrics.condition) = names(new.metric)
+  rownames(new.metrics.condition) = c(rownames(metrics.condition), rownames(new.metric))
+  metrics.condition = new.metrics.condition
+}
+
+```
+
+```{r}
+library(GGally)
+ggscatmat(metrics, columns = 9:15, color="condition", alpha=0.8)
+```
+Highest power Freq by condition
+```{r}
+
+ggplot(metrics, aes(x=condition, y=highest_power_freq,color=condition)) +
+  geom_boxplot() +
+  ylab('Highest Power Frequency [Hz]') +
+  xlab('Condition') + theme_bw() 
+``` 
+Mean number of events per embryo
+```{r}
+ggplot(metrics, aes(x = embryo, y = events_count_mean, color = condition)) +
+  #geom_boxplot() +
+  geom_jitter(position=position_jitter(0.05)) +
+  ylab('Highest Power Frequency [Hz]') +
+  xlab('Embryo') + 
+  theme_bw() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+av=aov(highest_power_freq ~ culture_date, metrics)
+summary(av)
+
+a = aggregate(highest_power_freq ~ embryo, metrics, FUN=function(x) list(mean=mean(x), sd=sd(x), count=length(x)))
+DT::datatable(a)
+```
+
+Count of days with recordings from the same embryo
+```{r}
+embryo.count = aggregate(pcluster ~ embryo+div+condition, 
+                         data=metrics,
+                         FUN = function(x) c(count=length(x)))
+
+names(embryo.count)[4] <- 'count'
+
+embryo.div.count = aggregate(count ~ embryo + condition, data=embryo.count, FUN=length)
+
+#ggplot(data=embryo.count, aes(x = div, y=count, color=embryo)) + 
+#   geom_jitter() +
+#   ylab("Count of recordings") +
+#   xlab("DIV") +  theme_bw() 
+```
+
+
+
+Correlations between values
+```{r}
+C = cor(metrics[, c('div', cols[6:length(cols)])], method='kendall')
+DT::datatable(C)
+```
+PCA
+
+```{r}
+#pca.cols = c('div','highest_power_freq', #'highest_oscillation_power',
+#             'ipis_mean','activity_rate_mean','cluster_coeff_two')
+pca.cols = c('div', cols[9:length(cols)])
+
+#pca.dat = filter(metrics, condition != 'mecp2ko')
+pca.dat = metrics
+
+df.pca = prcomp(pca.dat[,pca.cols], center = TRUE, scale. = TRUE)
+df.pca$rotation[,1:2]
+
+library(ggbiplot)
+ggbiplot(df.pca, obs.scale = 1, var.scale = 1,
+              groups = pca.dat$condition, ellipse = TRUE,
+              circle = FALSE, var.axes=TRUE) + 
+  scale_color_discrete(name = '') + 
+  theme(legend.direction = 'horizontal', legend.position = 'top')
+```
+```{r}
+X = data.frame(df.pca$x[,seq(1,7)])
+X$condition = pca.dat$condition
+```
+
+
+Classifier WT vs KO
+```{r}
+library(caret)
+library(dplyr)
+
+set.seed(825)
+
+fitControl = trainControl(method = "repeatedcv",
+                           number = 10,
+                           repeats = 5)
+
+filtered.X = filter(X, condition != 'mecp2het')
+#filtered.X = X
+filtered.X$condition = factor(filtered.X$condition)
+#nvModel = train(condition ~ div + cluster_coeff_two + highest_power_freq + highest_oscillation_power + 
+#                  ncells + activity_rate_mean + activity_rate_std + events_count_mean + events_count_std +
+#                  event_ampl_mean + event_ampl_std + ipis_mean + ipis_std,
+#nvModel = train(condition ~ .,
+#                data = filtered.X, 
+#                method = "svmLinearWeights", 
+#                trControl = fitControl,
+#                verbose = FALSE)
+nvModel = train(condition ~ .,
+                data = filtered.X, 
+                method = "svmLinearWeights", 
+                kmax = 3,
+                trControl = fitControl,
+                verbose = FALSE)
+nvModel
+```
+
+Scatter plot of highest power freq and clustering coefficient as function of DIV
+```{r}
+
+ggplot(data=metrics, aes(x = div, y=highest_power_freq, color=condition)) + 
+   geom_jitter(position=position_jitter(0.2)) +
+   geom_text(aes(label=network_id)) +
+   ylab("Highest Power Frequency") +
+   xlab("DIV") +  theme_bw() 
+
+ggplot(data=metrics, aes(x = div, y=highest_power_freq, color=condition)) + 
+   geom_jitter(position=position_jitter(0.2), aes(size=highest_power_freq)) +
+   ylab("Clustering strength coefficient") +
+   xlab("DIV") +  theme_bw() 
+```
+#Variance within groups
+- per embryo
+```{r}
+a = aggregate(highest_power_freq ~ embryo, 
+          data = metrics, 
+          FUN = function(x) c(mean=mean(x), var=var(x), count=length(x)))
+a
+```
+
+
+
+
