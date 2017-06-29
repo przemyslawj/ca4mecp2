@@ -21,6 +21,9 @@ roi_img_scaled = imresize(roi_img, tiff_scale);
 
 mimg = meanimg(fname, 1:min(20,tiff_len));
 [u, v] = fftalign(mimg, roi_img_scaled(:,:,1));
+if abs(u) > 20 || abs(v) > 20
+    warning('Large shift of ROI img detected u=%d, v=%d', u, v)
+end
 
 %% create cellstruct
 cells = cell(numel(rois),4);
@@ -103,6 +106,7 @@ dat.cl.Lx = width;
 dat.cl.Ly = height;
 
 dat.roi_img = circshift(roi_img_scaled, -[v u]);
+dat.roi_img_T = [v u];
 
 end
 

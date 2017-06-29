@@ -12,7 +12,7 @@ else
     cells_not_noisy = find(max(abs(fstat.dF), [], 2) <= dF_max);
     cell_signal_diff = mean(fstat.Fcell, 2) ...
                        - mean(fstat.FcellNeu, 2) ...
-                       - 0.6 * std(fstat.FcellNeu, [], 2);
+                       - 0.7 * std(fstat.FcellNeu, [], 2);
     keep_cells = find(fstat.event_counts >= min_events & cell_signal_diff > 0);
     keep_cells = sort(intersect(keep_cells, cells_not_noisy));
 end

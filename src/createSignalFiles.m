@@ -19,7 +19,7 @@ for i=1:numel(tiff_files)
         dat = extractSignal(roi_tiff_files{1}, roi_zip_files{1}, fname);
         dat.finfo = tiff_info;
         save(output_f, 'dat');
-    else 
+    else
         if ~exist(output_f, 'file')
             sprintf('no roi defined for %s\n', fname)
         end
