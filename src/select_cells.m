@@ -26,7 +26,7 @@ for cell_index=1:roi_count
     hold off;
         
     subplot(4,1,4);
-    plotTrace(dF(i,:), 0, peaks{i});
+    plotTrace(dF(i,:), 0, peaks{i}, 2.8);
     title(sprintf('Trace for ROI %d', i));
     
     prompt = sprintf('Do you want to keep %d out of %d? y/n [y]: ',...

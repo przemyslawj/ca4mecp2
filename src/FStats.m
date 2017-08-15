@@ -10,7 +10,7 @@ FcellNeu = dat.FcellNeu{1};
 F = Fcell - 0.0 * FcellNeu;
 dF = dFOverF(F);
 % Smooth the signal
-dF = exp_smooth(dF, 0.5);
+dF = exp_smooth(dF, 0.4);
 
 [peak_extends, ~, peaks, event_counts] = detectEvents(dF, event_detect);
 active_rate = mean(peak_extends, 2)';
