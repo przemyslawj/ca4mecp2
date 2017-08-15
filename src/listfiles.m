@@ -1,4 +1,6 @@
 function [result] = listfiles(src_dir, filenamepattern)
+% Returns an array of file paths matching filenamepattern and found recursively
+% in src_dir
 
     allfiles = dir(src_dir);
     result = {};

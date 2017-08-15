@@ -11,5 +11,5 @@ function r = rigidAlign( fname )
         [u, v] = fftalign(mimg, A);
         r.T(i,:) = [u, v];
     end
-    
+
 end

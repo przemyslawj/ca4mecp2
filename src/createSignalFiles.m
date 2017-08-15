@@ -1,3 +1,9 @@
+% Reads in .tiff files with Ca timelapse and extracts values of fluorescence
+% for ROI in zip files with ROI placed in data_root_dir according to structure
+% defined in README.md. The output Matlab data file contains fluorescence
+% values as well as metadata for the recorded signal, e.g. recording date,
+% culture genotype and ROIs location.
+
 data_root_dir = '/home/przemek/neurodata/ca_mecp2_culture';
 output_dir = [data_root_dir '/signal'];
 aligned_tiffs_dir = [data_root_dir '/Mecp2_cultures_aligned'];

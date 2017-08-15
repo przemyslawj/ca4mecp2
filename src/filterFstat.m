@@ -1,5 +1,10 @@
 function [ result ] = filterFstat( fstat )
-% Returns dat structure only with data for cells that should be kept
+% Returns dat structure only with data for filtered cells.
+% Filtering rejects ROI which have:
+% - infrequent calcium events (<6)
+% - mean fluorescence signal lower than summed fluorescence of neuropil and 0.7
+%   of its std
+%
 
 result = struct(fstat);
 
